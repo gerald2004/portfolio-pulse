@@ -28,3 +28,9 @@ export interface ParSummary {
   par30: number;
   par90: number;
 }
+
+/** Total repayments collected in one calendar month. `month` is YYYY-MM. */
+export interface MonthlyRepayment {
+  month: string;
+  amount: number;
+}
