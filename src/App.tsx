@@ -1,9 +1,14 @@
-import { useMemo } from 'react';
-import { ChartPlaceholder } from './components/ChartPlaceholder';
+import { useMemo, useState } from 'react';
+import { AgingBarChart } from './components/AgingBarChart';
+import { LoanStrip } from './components/LoanStrip';
 import { LoanTable } from './components/LoanTable';
+import { ParDonut } from './components/ParDonut';
+import { RepaymentsLine } from './components/RepaymentsLine';
 import { StatTiles } from './components/StatTiles';
 import { generateLoans } from './data/generateLoans';
-import { portfolioAtRisk } from './domain/metrics';
+import { generateMonthlyRepayments } from './data/generateMonthlyRepayments';
+import { portfolioAtRisk, summarizeBuckets } from './domain/metrics';
+import type { BucketKey } from './domain/types';
 
 /** A fixed as-of date keeps the numbers (and screenshot tests) stable. */
 const AS_OF = '2026-11-13';
@@ -11,6 +16,11 @@ const AS_OF = '2026-11-13';
 export default function App() {
   const loans = useMemo(() => generateLoans({ count: 500, seed: 42, asOf: AS_OF }), []);
   const par = useMemo(() => portfolioAtRisk(loans, AS_OF), [loans]);
+  const buckets = useMemo(() => summarizeBuckets(loans, AS_OF), [loans]);
+  const repayments = useMemo(() => generateMonthlyRepayments({ months: 12, seed: 42, asOf: AS_OF }), []);
+
+  /** The aging bucket picked on the bar chart. The loan table filters to it. */
+  const [bucket, setBucket] = useState<BucketKey | null>(null);
 
   return (
     <main className="page">
@@ -22,19 +32,13 @@ export default function App() {
       <StatTiles par={par} loanCount={loans.length} />
 
       <div className="grid">
-        <ChartPlaceholder
-          title="Aging buckets"
-          todo="SVG bar chart of outstanding principal per bucket (use summarizeBuckets)"
-        />
-        <ChartPlaceholder title="Portfolio at risk" todo="SVG donut for PAR 1 / 30 / 90" />
+        <AgingBarChart rows={buckets} selected={bucket} onSelect={setBucket} />
+        <ParDonut par={par} />
       </div>
-      <ChartPlaceholder title="Repayments over time" todo="SVG line chart with crosshair and keyboard navigation" />
-      <ChartPlaceholder
-        title="Every loan at a glance"
-        todo="Canvas strip, one column per loan, coloured by days overdue"
-      />
+      <RepaymentsLine data={repayments} />
+      <LoanStrip loans={loans} asOf={AS_OF} />
 
-      <LoanTable loans={loans} asOf={AS_OF} />
+      <LoanTable loans={loans} asOf={AS_OF} bucket={bucket} onClearBucket={() => setBucket(null)} />
     </main>
   );
 }

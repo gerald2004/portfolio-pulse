@@ -81,16 +81,176 @@ body {
   margin: 0 0 12px;
   font-size: 16px;
 }
-.placeholder {
+/* ---------- Charts ---------- */
+/* The wrapper is the positioning box for tooltips, which are plain HTML over the drawing. */
+.chart {
+  position: relative;
+}
+.chart svg {
+  display: block;
+  height: auto;
+  overflow: visible;
+}
+.axis-label {
+  fill: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.axis-label-small {
+  font-size: 9.5px;
+}
+.gridline {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+.bar {
+  cursor: pointer;
+  transition: opacity 120ms;
+}
+.bar:hover {
+  filter: brightness(1.08);
+}
+.bar:focus-visible,
+.line-chart:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.chart-tip {
+  position: absolute;
+  transform: translate(-50%, -100%);
   display: grid;
-  place-items: center;
-  min-height: 180px;
-  padding: 16px;
-  text-align: center;
-  border: 2px dashed var(--border);
-  border-radius: 8px;
+  gap: 2px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--text);
+  color: var(--surface);
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1;
+}
+.chart-note {
+  margin: 8px 0 0;
   color: var(--muted);
   font-size: 13px;
+}
+.line {
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.point {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.point-active {
+  fill: var(--accent);
+}
+.crosshair {
+  stroke: var(--muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.donut {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+}
+.donut svg {
+  flex: 0 1 200px;
+  min-width: 140px;
+}
+.donut-track {
+  stroke: var(--border);
+}
+.donut-value {
+  fill: var(--text);
+  font-size: 26px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  flex: 1 1 180px;
+  font-size: 13px;
+}
+.legend li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+.legend small {
+  color: var(--muted);
+}
+.legend strong {
+  font-variant-numeric: tabular-nums;
+}
+.legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 12px;
+}
+.legend-row li {
+  display: flex;
+}
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex: none;
+}
+.strip {
+  display: block;
+  border-radius: 4px;
+}
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px 2px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  font-size: 13px;
+}
+.filter-chip button {
+  all: unset;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 20px;
+  color: var(--muted);
+}
+.filter-chip button:hover {
+  color: var(--text);
+}
+.filter-chip button:focus-visible {
+  outline: 2px solid var(--accent);
+}
+/* Present for screen readers, invisible on screen. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 .table-head {
   display: flex;
