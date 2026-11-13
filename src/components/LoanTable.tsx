@@ -1,27 +1,40 @@
 import { useMemo, useState } from 'react';
-import { daysOverdue } from '../domain/metrics';
-import type { Loan } from '../domain/types';
+import { BUCKETS, bucketOf, daysOverdue } from '../domain/metrics';
+import type { BucketKey, Loan } from '../domain/types';
 import { money } from '../format';
 
 type SortKey = 'member' | 'outstandingPrincipal' | 'overdueAmount' | 'dpd';
 
-export function LoanTable({ loans, asOf }: { loans: readonly Loan[]; asOf: string }) {
+interface Props {
+  loans: readonly Loan[];
+  asOf: string;
+  /** When set, only loans in this aging bucket are listed. */
+  bucket?: BucketKey | null;
+  /** Called when the user removes the bucket filter from the table. */
+  onClearBucket?: () => void;
+}
+
+export function LoanTable({ loans, asOf, bucket = null, onClearBucket }: Props) {
   const [query, setQuery] = useState('');
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'dpd', dir: -1 });
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
     const withDpd = loans.map((l) => ({ ...l, dpd: daysOverdue(l, asOf) }));
+    // The bucket filter (from the bar chart) applies first, then the search.
+    const inBucket = bucket ? withDpd.filter((l) => bucketOf(l.dpd) === bucket) : withDpd;
     const filtered = q
-      ? withDpd.filter((l) => l.member.toLowerCase().includes(q) || l.id.toLowerCase().includes(q))
-      : withDpd;
+      ? inBucket.filter((l) => l.member.toLowerCase().includes(q) || l.id.toLowerCase().includes(q))
+      : inBucket;
     return [...filtered].sort((a, b) => {
       const av = a[sort.key];
       const bv = b[sort.key];
       const cmp = typeof av === 'string' ? av.localeCompare(bv as string) : (av as number) - (bv as number);
       return cmp * sort.dir || a.id.localeCompare(b.id);
     });
-  }, [loans, asOf, query, sort]);
+  }, [loans, asOf, bucket, query, sort]);
+
+  const bucketLabel = bucket ? BUCKETS.find((b) => b.key === bucket)?.label : null;
 
   const header = (key: SortKey, label: string, numeric = false) => (
     <th
@@ -43,6 +56,16 @@ export function LoanTable({ loans, asOf }: { loans: readonly Loan[]; asOf: strin
     <section className="card">
       <div className="table-head">
         <h2>Loans</h2>
+        {bucketLabel && (
+          <span className="filter-chip">
+            Bucket: {bucketLabel}
+            {onClearBucket && (
+              <button type="button" onClick={onClearBucket} aria-label={`Clear bucket filter ${bucketLabel}`}>
+                ×
+              </button>
+            )}
+          </span>
+        )}
         <input
           type="search"
           placeholder="Search member or loan ID"
@@ -66,7 +89,7 @@ export function LoanTable({ loans, asOf }: { loans: readonly Loan[]; asOf: strin
             {rows.length === 0 ? (
               <tr>
                 <td colSpan={5} className="empty">
-                  No loans match “{query}”.
+                  {query.trim() ? `No loans match “${query}”.` : 'No loans in this bucket.'}
                 </td>
               </tr>
             ) : (

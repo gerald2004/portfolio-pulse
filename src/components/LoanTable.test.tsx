@@ -35,6 +35,30 @@ describe('LoanTable', () => {
     expect(screen.getByText(/No loans match/)).toBeInTheDocument();
   });
 
+  it('lists only the loans in the selected aging bucket', () => {
+    // LN0002 is 43 days overdue (31–60); LN0003 is 3 days (1–30); LN0001 is current.
+    const { rerender } = render(<LoanTable loans={loans} asOf={ASOF} bucket="31-60" />);
+    expect(bodyRows().map((r) => within(r).getAllByRole('cell')[0]!.textContent)).toEqual(['LN0002']);
+    expect(screen.getByText('1 of 3 loans')).toBeInTheDocument();
+
+    rerender(<LoanTable loans={loans} asOf={ASOF} bucket={null} />);
+    expect(bodyRows()).toHaveLength(3);
+  });
+
+  it('applies the search inside the selected bucket', () => {
+    render(<LoanTable loans={loans} asOf={ASOF} bucket="31-60" />);
+    fireEvent.change(screen.getByLabelText('Search loans'), { target: { value: 'amina' } });
+    expect(screen.getByText(/No loans match/)).toBeInTheDocument();
+  });
+
+  it('says so when the selected bucket is empty, and offers to clear it', () => {
+    const onClear = vi.fn();
+    render(<LoanTable loans={loans} asOf={ASOF} bucket="180+" onClearBucket={onClear} />);
+    expect(screen.getByText('No loans in this bucket.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Clear bucket filter/ }));
+    expect(onClear).toHaveBeenCalledTimes(1);
+  });
+
   it('toggles sort direction and reports it with aria-sort', () => {
     render(<LoanTable loans={loans} asOf={ASOF} />);
     const btn = screen.getByRole('button', { name: /Member/ });
